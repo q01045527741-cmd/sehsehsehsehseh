@@ -3,9 +3,10 @@ const crypto = require('crypto');
 const { execSync } = require('child_process');
 
 // ============================================================
-// Domain checker engine — 7 providers
-// MetaMask (eth-phishing-detect simulation) + Blockaid (SDK)
-// + ChainPatrol + PhishFort + ScamSniffer + CryptoScamDB + WalletGuard
+// Domain checker engine — 14 providers
+// MetaMask · Blockaid · ChainPatrol · PhishFort · ScamSniffer
+// CryptoScamDB · WalletGuard · SEALIntel · Phantom · PhishDestroy
+// Rabby · Rainbow · TrustWallet · Coinbase
 // ============================================================
 
 // ── Optional deps (graceful fallback) ──────────────────────
@@ -28,7 +29,7 @@ let cache = {
   cryptoscamdb:     { data: null, lastFetch: 0 },
   seal:             { data: null, lastFetch: 0 },
   phantom:          { data: null, lastFetch: 0 },
-  rainbow:          { data: null, lastFetch: 0 },  // eth-phishing-detect config.json
+  rainbow:          { data: null, lastFetch: 0 },  // Rainbow Wallet uses MetaMask's eth-phishing-detect config.json
 };
 
 const CACHE_TTL     = 10 * 60 * 1000;   // 10 min full reload
@@ -60,7 +61,7 @@ async function robustGetJson(url, timeoutSec = 30) {
       timeout: timeoutSec * 1000,
       maxContentLength: 50 * 1024 * 1024,
       maxBodyLength: 50 * 1024 * 1024,
-      headers: { 'User-Agent': CHROME_UA || 'DomainBanChecker/2.0' },
+      headers: { 'User-Agent': CHROME_UA },
     });
     return res.data;
   } catch { /* axios failed, try curl */ }
@@ -732,7 +733,7 @@ async function checkCryptoScamDB(domain) {
 }
 
 // ════════════════════════════════════════════════════════════
-// 7. WalletGuard (ConsenSys/MetaMask-acquired)
+// 7. WalletGuard — independent Web3 security extension
 // ════════════════════════════════════════════════════════════
 
 const WALLETGUARD_API = 'https://7gsdnppspe.us-east-2.awsapprunner.com';
@@ -974,7 +975,8 @@ async function checkTrustWallet(domain) {
 }
 
 // ════════════════════════════════════════════════════════════
-// 14. Coinbase Wallet — Blockaid via Security Alerts API (what Coinbase uses)
+// 14. Coinbase Wallet — client-side-detection API (Blockaid-powered),
+//     falls back to GoPlus phishing API if primary is unavailable
 // ════════════════════════════════════════════════════════════
 
 async function checkCoinbase(domain) {
